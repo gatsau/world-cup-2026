@@ -50,6 +50,62 @@
   nav button:hover { color: var(--text); background: var(--surface2); }
   nav button.active { color: var(--gold); background: var(--bg); border: 1px solid var(--border); border-bottom: 1px solid var(--bg); }
 
+  /* ── PICKS FORM ── */
+  .picks-intro { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+  .picks-intro b { color: var(--text); }
+  .person-select { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .person-select button {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    padding: 8px 16px; border-radius: 20px; font-size: 0.875rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .person-select button:hover { color: var(--text); border-color: var(--green2); }
+  .person-select button.active { background: var(--green); border-color: var(--green2); color: #fff; }
+
+  .pick-game {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .pick-game-name { flex: 1; min-width: 180px; font-weight: 600; font-size: 0.9rem; }
+  .pick-game-date { font-size: 0.75rem; color: var(--muted); }
+  .pick-btns { display: flex; gap: 6px; }
+  .pick-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    padding: 7px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .pick-btn:hover { color: var(--text); }
+  .pick-btn.selected-home { background: #0d2818; border-color: var(--correct); color: #6ee7b7; }
+  .pick-btn.selected-away { background: #2a0d0d; border-color: var(--wrong); color: #fca5a5; }
+  .pick-btn.selected-draw { background: #1e2a3a; border-color: #3b82f6; color: #93c5fd; }
+
+  .submit-section { margin-top: 24px; }
+  .submit-btn {
+    background: var(--green); color: #fff; border: none; padding: 14px 28px;
+    border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: background 0.15s; width: 100%;
+  }
+  .submit-btn:hover { background: var(--green2); }
+  .submit-btn:disabled { background: var(--pending); color: var(--muted); cursor: not-allowed; }
+  .submit-output {
+    margin-top: 16px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; display: none;
+  }
+  .submit-output.open { display: block; }
+  .submit-output pre { white-space: pre-wrap; font-size: 0.8rem; color: var(--text); font-family: monospace; }
+  .copy-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; margin-top: 10px; transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); }
+  .email-btn {
+    background: #1a3a80; border: 1px solid #3b82f6; color: #93c5fd;
+    padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; margin-top: 10px; margin-left: 8px; transition: all 0.15s; text-decoration: none; display: inline-block;
+  }
+  .no-upcoming { text-align: center; padding: 40px; color: var(--muted); }
+
   /* ── MAIN ── */
   main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
 
@@ -199,6 +255,7 @@
   <button onclick="showTab('fixtures')">📋 Fixtures</button>
   <button onclick="showTab('people')">👤 By Person</button>
   <button onclick="showTab('groups')">🗂 Groups</button>
+  <button onclick="showTab('submit')">✏️ Submit Picks</button>
 </nav>
 
 <main>
@@ -229,6 +286,26 @@
     <h2>👤 Tips by Person</h2>
     <div id="person-grid" class="person-grid"></div>
     <div id="person-detail" class="person-detail"></div>
+  </section>
+
+  <!-- ── SUBMIT PICKS ── -->
+  <section id="submit" class="section">
+    <h2>✏️ Submit Your Picks</h2>
+    <div class="picks-intro">
+      <b>How it works:</b> Select your name, pick a result for each upcoming game, then tap <b>Generate Email</b>. It'll open a pre-filled email to Max — just hit send!<br>
+      You can also copy the picks text and send it via WhatsApp or iMessage.
+    </div>
+    <div class="person-select" id="submit-person-select"></div>
+    <div id="submit-games-list"></div>
+    <div class="submit-section" id="submit-section" style="display:none">
+      <button class="submit-btn" onclick="generateSubmission()">📧 Generate Email to Max</button>
+      <div class="submit-output" id="submit-output">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">Copy and send this to Max:</div>
+        <pre id="submit-text"></pre>
+        <button class="copy-btn" onclick="copyPicks()">📋 Copy to clipboard</button>
+        <a class="email-btn" id="submit-email-link" href="#">✉️ Open in email</a>
+      </div>
+    </div>
   </section>
 
   <!-- ── GROUPS ── -->
@@ -329,6 +406,7 @@ function showTab(id) {
   if (id === "fixtures")    renderFixtures(currentStageFilter);
   if (id === "people")      renderPeople();
   if (id === "groups")      renderGroups();
+  if (id === "submit")      renderSubmitTab();
 }
 
 // ── LEADERBOARD ──────────────────────────────────────────────────────────────
@@ -501,6 +579,109 @@ function renderGroups() {
       <div class="group-card-header">Group ${g}</div>
       ${teams.map(t => `<div class="group-team"><span>${t}</span></div>`).join("")}
     </div>`).join("");
+}
+
+// ── SUBMIT PICKS ─────────────────────────────────────────────────────────────
+let submitPerson = null;
+let submitSelections = {}; // matchId -> "home"|"away"|"draw"
+
+function renderSubmitTab() {
+  // Person selector
+  const sel = document.getElementById("submit-person-select");
+  sel.innerHTML = DATA.participants.map(p =>
+    `<button class="${submitPerson===p?'active':''}" onclick="selectSubmitPerson('${p}')">${p}</button>`
+  ).join("");
+  renderSubmitGames();
+}
+
+function selectSubmitPerson(name) {
+  submitPerson = name;
+  submitSelections = {};
+  document.getElementById("submit-output").classList.remove("open");
+  renderSubmitTab();
+}
+
+function renderSubmitGames() {
+  const el = document.getElementById("submit-games-list");
+  const sec = document.getElementById("submit-section");
+  if (!submitPerson) { el.innerHTML = ""; sec.style.display = "none"; return; }
+
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = DATA.matches.filter(m =>
+    m.result === null && m.home !== "TBD" && m.date >= today
+  );
+
+  if (upcoming.length === 0) {
+    el.innerHTML = '<div class="no-upcoming">No upcoming games right now — check back soon!</div>';
+    sec.style.display = "none"; return;
+  }
+
+  // Group by stage heading
+  let lastHeading = "";
+  let html = "";
+  upcoming.forEach(m => {
+    const heading = stageLabel(m);
+    if (heading !== lastHeading) {
+      html += `<div class="stage-heading">${heading}</div>`;
+      lastHeading = heading;
+    }
+    const sel = submitSelections[m.id];
+    const isKnockout = m.stage !== "group";
+    html += `
+      <div class="pick-game">
+        <div class="pick-game-name">
+          ${m.home} <span style="color:var(--muted);font-size:0.8rem">vs</span> ${m.away}
+          <div class="pick-game-date">${fmtDate(m.date)}</div>
+        </div>
+        <div class="pick-btns">
+          <button class="pick-btn ${sel==='home'?'selected-home':''}" onclick="setPick('${m.id}','home')">${m.home}</button>
+          ${!isKnockout ? `<button class="pick-btn ${sel==='draw'?'selected-draw':''}" onclick="setPick('${m.id}','draw')">Draw</button>` : ''}
+          <button class="pick-btn ${sel==='away'?'selected-away':''}" onclick="setPick('${m.id}','away')">${m.away}</button>
+        </div>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+  sec.style.display = "block";
+}
+
+function setPick(id, val) {
+  submitSelections[id] = submitSelections[id] === val ? null : val;
+  renderSubmitGames();
+}
+
+function generateSubmission() {
+  if (!submitPerson) return;
+  const picks = Object.entries(submitSelections).filter(([,v]) => v);
+  if (picks.length === 0) {
+    alert("Please make at least one pick first!");
+    return;
+  }
+
+  const lines = picks.map(([id, pick]) => {
+    const m = DATA.matches.find(x => x.id === id);
+    const pickLabel = pick === "home" ? m.home : pick === "away" ? m.away : "Draw";
+    return `  ${m.home} vs ${m.away} (${fmtDate(m.date)}): ${pickLabel}`;
+  });
+
+  const text = `${submitPerson}'s picks:\n${lines.join("\n")}`;
+  document.getElementById("submit-text").textContent = text;
+
+  const subject = encodeURIComponent(`World Cup picks — ${submitPerson}`);
+  const body = encodeURIComponent(text);
+  document.getElementById("submit-email-link").href =
+    `mailto:magikable@gmail.com?subject=${subject}&body=${body}`;
+
+  document.getElementById("submit-output").classList.add("open");
+}
+
+function copyPicks() {
+  const text = document.getElementById("submit-text").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = "✅ Copied!";
+    setTimeout(() => btn.textContent = "📋 Copy to clipboard", 2000);
+  });
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
